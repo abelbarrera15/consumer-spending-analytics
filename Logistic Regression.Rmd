@@ -68,6 +68,7 @@ Step 1: Determine whether the association between the response and the term is s
 ```{r}
 summary(glm(ordered ~ basket_icon_click+basket_add_list+basket_add_detail+sort_by+image_picker+account_page_click+promo_banner_click+detail_wishlist_add+list_size_dropdown+closed_minibasket_click+checked_delivery_detail+checked_returns_detail+sign_in+saw_checkout+saw_sizecharts+saw_delivery+saw_account_upgrade+saw_homepage+device_mobile+device_computer+device_tablet+returning_user+loc_uk, family = binomial,data = train))
 ```
+key results:
 
 P-value ≤ α: The association is statistically significant
 
@@ -151,4 +152,4 @@ for (i in 2:25) {
 }
 ```
 
-Although the p-values are changing somewhat, they are all clearly non-significant, so they are giving a similar conclusion, that there is no evidence of poor fit. So for this data set, choosing different values of g doesn't seem to affect the substantive conclusion.
+Key Results: Although the p-values are changing somewhat, they are all clearly non-significant, so they are giving a similar conclusion, that there is no evidence of poor fit. So for this data set, choosing different values of g doesn't seem to affect the substantive conclusion.
