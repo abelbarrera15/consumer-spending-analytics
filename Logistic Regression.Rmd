@@ -1,0 +1,154 @@
+---
+title: "logistic Regression"
+author: "Samyukta Reddy"
+date: "4/15/2021"
+output: word_document
+---
+
+```{r}
+setwd("C:/Users/rvogg/Desktop/project")
+
+set.seed(1)
+df <- read.csv(file = "training_sample.csv",header = TRUE)
+head(df,3)
+```
+
+
+```{r}
+
+ind <- sample(dim(df)[1], dim(df)[1]*0.8) # 80-20 training-testing data split 
+
+train <- df[ind,]
+test <- df[-ind,]
+
+```
+
+
+
+```{r}
+ordered_glm <- glm(ordered~basket_icon_click+basket_add_list+basket_add_detail+sort_by+image_picker+account_page_click+promo_banner_click+detail_wishlist_add+list_size_dropdown+closed_minibasket_click+checked_delivery_detail+checked_returns_detail+sign_in+saw_checkout+saw_sizecharts+saw_delivery+saw_account_upgrade+saw_homepage+device_mobile+device_computer+device_tablet+returning_user+loc_uk, family = binomial,data = train)
+
+summary(ordered_glm)
+
+# prediction is done on testing data
+
+pred_glm <- predict(ordered_glm,newdata=test, type = "response")
+
+probs_glm <- ifelse(pred_glm > 0.5, "1","0" ) # "up","down"
+
+ordered_test <- test$ordered
+
+tab <- table(probs_glm,ordered_test)
+
+tab
+
+```
+
+```{r}
+library(caret)
+confusionMatrix(tab)
+```
+*******
+
+with having factors but the accuracy remains same.
+
+```{r}
+#col_names <- names(df)[-1]
+#df[,col_names] <- lapply(df[,col_names] , factor)
+#summary(df)
+```
+
+
+************
+
+Interpret the key results for Binary Logistic Regression
+
+Step 1: Determine whether the association between the response and the term is statistically significant.
+
+```{r}
+summary(glm(ordered ~ basket_icon_click+basket_add_list+basket_add_detail+sort_by+image_picker+account_page_click+promo_banner_click+detail_wishlist_add+list_size_dropdown+closed_minibasket_click+checked_delivery_detail+checked_returns_detail+sign_in+saw_checkout+saw_sizecharts+saw_delivery+saw_account_upgrade+saw_homepage+device_mobile+device_computer+device_tablet+returning_user+loc_uk, family = binomial,data = train))
+```
+
+P-value ≤ α: The association is statistically significant
+
+basket_icon_click,basket_add_list,basket_add_detail,account_page_click,detail_wishlist_add,list_size_dropdown,closed_minibasket_click,checked_delivery_detail,checked_returns_detail,sign_in,saw_delivery,saw_account_upgrade,saw_homepage,device_computer,device_tablet,returning_user,loc_uk   
+
+P-value > α: The association is not statistically significant
+
+saw_checkout,saw_sizecharts,device_mobile,sort_by,image_picker,promo_banner_click
+
+
+*********
+
+Step 2: Understand the effects of the predictors
+
+confidence intervals for the coefficient estimates
+
+```{r}
+confint(ordered_glm)
+```
+
+```{r}
+#install.packages("aod")
+library("aod")
+wald.test(b = coef(ordered_glm), Sigma = vcov(ordered_glm), Terms = 1:24)
+```
+
+```{r}
+
+exp(cbind(Odds_Ratio = coef(ordered_glm)))
+
+```
+Key Result: Odds Ratio
+
+In these results, the model uses the all the 24 variables to predict the weather or not a particular order has been placed in a store. The odds ratio indicates that for any predictor variable effect on the response variable (i.e, ordered), the likelihood that order has been placed or not by the the odds ratio value against each predictor variable.
+
+
+Step 3: Determine how well the model fits your data
+
+```{r}
+dev <- ordered_glm$deviance
+null_dev <- ordered_glm$null.deviance
+
+cat("Pseudo R-squared for logistic regression model\n\n")
+cat("Hosmer and Lemeshow R-squared\t", round((1 - dev / null_dev), 3), "\n")
+
+```
+
+
+Key Results: Deviance R-Sq, AIC
+In these results, the model explains 88.3% of the deviance in the response variable. For these data, the Deviance R2 value indicates the model provides a good fit to the data. If additional models are fit with different predictors, the AIC value to compare how well the models fit the data.
+
+
+
+```{r}
+logLik(ordered_glm) #likelihood ratio test (the deviance residual is -2*log likelihood)
+```
+
+Step 4: Determine whether the model does not fit the data
+
+```{r}
+cat("Residual Deviance has reduced by", null_dev-dev,"with a loss of 23 degrees of freedom.")
+cat(ordered_glm$df)
+```
+Hosmer-Lemeshow Goodness of Fit
+
+```{r}
+#install.packages("ResourceSelection")
+
+library(ResourceSelection)
+h <- hoslem.test(train$ordered, fitted(ordered_glm),g=25)
+h
+```
+
+```{r}
+cbind(h$observed,h$expected)
+```
+
+```{r}
+for (i in 2:25) {
+	print(hoslem.test(train$ordered, fitted(ordered_glm), g=i)$p.value)
+}
+```
+
+Although the p-values are changing somewhat, they are all clearly non-significant, so they are giving a similar conclusion, that there is no evidence of poor fit. So for this data set, choosing different values of g doesn't seem to affect the substantive conclusion.
