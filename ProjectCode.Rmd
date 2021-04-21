@@ -1,0 +1,44 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+library(ISLR)
+library(grid)
+library(MASS)
+library(gridExtra)
+library(psych)
+library(dplyr)
+library(corrplot)
+library(class)
+```
+
+
+```{r}
+orgiData <- read.csv(file = './training_sample.csv')
+```
+
+```{r}
+set.seed(1)
+tidx <- sample(1:nrow(orgiData), 0.7*nrow(orgiData))
+train_data <- orgiData[tidx, ]
+test_data <- orgiData[-tidx,]
+```
+
+```{r}
+#train_data <- (Year < 2009)
+#train <- as.matrix(Lag2[train_data])
+#test <- as.matrix(Lag2[!train_data])
+#train_label <- Direction[train_data]
+set.seed(1)
+train = train_data[,2:24]
+test = test_data[,2:24]
+train_label = train_data[,25]
+test_label = test_data[,25]
+knn_pred <- knn(train, test, train_label, k = 2,use.all	= FALSE)
+table(knn_pred, test_data)
+mean(knn_pred==test_data)
+
+```
